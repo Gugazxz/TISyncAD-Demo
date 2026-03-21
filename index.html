@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' http://localhost:8080; img-src 'self' data:;">
+    
+    <title>TIsyncAD - Gerenciamento de Usuários</title>
+    
+    <link rel="stylesheet" href="./Style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <div id="popup-container"></div>
+
+    <button id="open-menu-btn" class="menu-button-fixed" aria-label="Abrir menu de opções">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidebar" id="app-menu">
+        <div class="sidebar-header">
+            <i class="fas fa-network-wired" style="font-size: 2rem; color: #26a69a; margin-right: 10px;"></i> 
+            <span style="font-weight: bold; font-size: 1.2rem; color: #fff;">TIsyncAD</span>
+            <button id="close-menu-btn" class="close-menu-button" aria-label="Fechar menu de opções">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <a href="#" id="menu-criacao-padrao" class="menu-item"><i class="fas fa-user-plus"></i> Criação Padrão</a>
+        <a href="#" id="menu-criacao-lote" class="menu-item"><i class="fas fa-users"></i> Criação Rápida</a>
+        <a href="#" id="menu-gerenciar-usuario" class="menu-item"><i class="fas fa-user-cog"></i> Gerenciar Usuário</a>
+        <a href="#" id="menu-forcar-sincronizacao" class="menu-item"><i class="fas fa-sync-alt"></i> Forçar Sincronização</a>
+    </div>
+
+    <div class="container">
+        <main id="main-content">
+            <header class="app-header-internal">
+                <i class="fas fa-network-wired" style="font-size: 2.5rem; color: #26a69a; margin-right: 15px;"></i>
+                <h1 id="subtitulo">Ferramenta de Criação de Usuários</h1>
+            </header>
+            
+            <form id="createUserForm" onsubmit="return false;">
+                
+                <section id="tela-dados-usuario" class="tela">
+                    <div id="status-dados-usuario"></div>
+                    <div class="form-group">
+                        <label for="nomeCompleto">Nome Completo <span id="char-counter" class="char-counter"></span></label>
+                        <div class="input-with-icon">
+                            <input type="text" id="nomeCompleto" name="nomeCompleto" required maxlength="50">
+                            <span id="username-status-icon"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="domainSelect">Domínio do E-mail</label>
+                        <select id="domainSelect" name="domainSelect">
+                            <option value="exemplo.com.br">@exemplo.com.br</option>
+                            <option value="EXEMPLO.LOCAL">@EXEMPLO.LOCAL</option>
+                            <option value="filial-sul.com.br">@filial-sul.com.br</option>
+                            <option value="parceiros-exemplo.com.br">@parceiros-exemplo.com.br</option>
+                        </select>
+                        <div class="custom-select-wrapper" data-select-id="domainSelect">
+                            <div class="custom-select-display"></div>
+                            <div class="custom-select-options hidden"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cargo">Cargo</label>
+                        <input type="text" id="cargo" name="cargo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="setor">Setor/Departamento</label>
+                        <input type="text" id="setor" name="setor" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gestorSearch">Gestor</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="gestorSearch" placeholder="Digite para buscar o gestor..." autocomplete="off">
+                            <input type="hidden" id="gestor" name="gestor">
+                            <div class="spinner hidden" id="spinnerGestor"></div>
+                            <ul id="gestorSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ouSearch">Centro de Custo</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="ouSearch" placeholder="Digite para buscar o centro de custo..." autocomplete="off">
+                            <input type="hidden" id="centroCusto" name="centroCusto">
+                            <div class="spinner hidden" id="spinnerOU"></div>
+                            <ul id="ouSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                    </div>
+                    <button type="button" id="btnProximoComputadores" class="button-primary" aria-label="Avançar para a tela de computadores">
+                        Próximo <i class="fas fa-arrow-right"></i>
+                    </button>
+                </section>
+
+                <section id="tela-computadores" class="tela hidden">
+                    <h2>Restrição de Acesso a Computadores</h2>
+                    <div class="form-group">
+                        <label for="logonWorkstationsSearch">Computador Permitido (Opcional)</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="logonWorkstationsSearch" placeholder="Digite para buscar o notebook..." autocomplete="off">
+                            <input type="hidden" id="logonWorkstations" name="logonWorkstations">
+                            <div class="spinner hidden" id="spinnerLogonWorkstations"></div>
+                            <ul id="logonWorkstationsSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                        <p class="info-text">*Ao selecionar um computador, o acesso do usuário será restrito <strong>apenas</strong> a ele. Deixe em branco para permitir o acesso de qualquer computador.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="btnVoltarDados" class="button-secondary" aria-label="Voltar para a tela anterior"><i class="fas fa-arrow-left"></i> Voltar</button>
+                        <button type="button" id="btnProximoLicencas" class="button-primary" aria-label="Avançar para a tela de licenças">Próximo <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </section>
+
+                <section id="tela-licencas" class="tela hidden">
+                    <h2>Escolha a licença do usuário</h2>
+                    <div id="status-licencas"></div>
+                    <div class="licenca-card">
+                        <label for="licenca-e3"><input type="radio" id="licenca-e3" name="licenca" value="E3" checked><strong>Microsoft 365 E3</strong></label>
+                        <span id="e3-disponiveis" class="licenca-contador">Buscando...</span>
+                    </div>
+                    <div class="licenca-card">
+                        <label for="licenca-std"><input type="radio" id="licenca-std" name="licenca" value="Standard"><strong>Microsoft 365 Standard</strong></label>
+                        <span id="standard-disponiveis" class="licenca-contador">Buscando...</span>
+                    </div>
+                    <div class="licenca-card">
+                        <label for="licenca-basic"><input type="radio" id="licenca-basic" name="licenca" value="Basic"><strong>Microsoft 365 Business Basic</strong></label>
+                        <span id="basic-disponiveis" class="licenca-contador">Buscando...</span>
+                    </div>
+                    <div class="licenca-card">
+                        <label for="licenca-none"><input type="radio" id="licenca-none" name="licenca" value="None"><strong>Sem Licença</strong></label>
+                        <span class="licenca-contador">N/A</span>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="btnVoltarComputadores" class="button-secondary" aria-label="Voltar para a tela anterior"><i class="fas fa-arrow-left"></i> Voltar</button>
+                        <button type="button" id="btnProximoGrupos" class="button-primary" aria-label="Avançar para a tela de grupos">Próximo <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </section>
+
+                <section id="tela-grupos" class="tela hidden">
+                    <h2>Adicionar Grupos (Opcional)</h2>
+                    <p class="info-text">*O grupo <strong>VPN_Acesso_Padrao</strong> já é adicionado automaticamente a todos os usuários.</p>
+                    <div class="form-group">
+                        <label for="groupSearch">Buscar Grupos</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="groupSearch" placeholder="Digite o nome do grupo..." autocomplete="off">
+                            <div class="spinner hidden" id="spinnerGroup"></div>
+                            <ul id="groupSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Grupos Selecionados</label>
+                        <div id="selectedGroupsList" class="selected-items-container">
+                            <span class="placeholder-text">Nenhum grupo selecionado</span>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="btnVoltarLicencas" class="button-secondary" aria-label="Voltar para a tela de licenças"><i class="fas fa-arrow-left"></i> Voltar</button>
+                        <button type="button" id="btnCriarUsuario" class="button-primary" aria-label="Finalizar a criação do usuário"><i class="fas fa-user-plus"></i> Finalizar Criação</button>
+                    </div>
+                </section>
+
+                <section id="tela-sucesso" class="tela hidden">
+                    <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                    <h2>Usuário Criado com Sucesso!</h2>
+                    <p id="success-details">O licenciamento foi iniciado em segundo plano. Seguem os dados de acesso:</p>
+                    <div class="success-data">
+                        <p><strong>E-mail:</strong> <span id="success-email"></span></p>
+                        <p><strong>Usuário:</strong> <span id="success-usuario"></span></p>
+                        <p><strong>Senha Inicial:</strong> <span id="success-senha"></span></p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="btnCopiarDados" class="button-secondary" aria-label="Copiar dados de acesso"><i class="fas fa-copy"></i> Copiar Dados</button>
+                        <button type="button" id="btnCriarNovo" class="button-primary" aria-label="Criar um novo usuário"><i class="fas fa-plus"></i> Criar Novo Usuário</button>
+                    </div>
+                </section>
+
+                <section id="tela-lote" class="tela hidden">
+                    <h2>Criação em Massa</h2>
+                     <p class="info-text">Adicione os nomes completos e selecione um Centro de Custo para criar usuários básicos sem licenças ou grupos.</p>
+                
+                    <div class="form-group" id="multi-user-name-list">
+                        <label>Nomes Completos</label>
+                        <div class="dynamic-input-group">
+                            <input type="text" name="nomeCompletoMulti" class="multi-user-name-input" placeholder="Nome completo do usuário 1">
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="add-user-name-field-btn" class="button-add">
+                        <i class="fas fa-plus"></i> Adicionar Usuário
+                    </button>
+
+                    <div class="form-group">
+                        <label for="multiOuSearch">Centro de Custo (para todos)</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="multiOuSearch" placeholder="Digite para buscar o centro de custo..." autocomplete="off">
+                            <input type="hidden" id="multiCentroCusto" name="multiCentroCusto">
+                            <div class="spinner hidden" id="spinnerMultiOU"></div>
+                            <ul id="multiOuSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="multiDomainSelect">Domínio do E-mail (para todos)</label>
+                         <select id="multiDomainSelect" name="multiDomainSelect">
+                            <option value="exemplo.com.br">@exemplo.com.br</option>
+                            <option value="EXEMPLO.LOCAL">@EXEMPLO.LOCAL</option>
+                            <option value="filial-sul.com.br">@filial-sul.com.br</option>
+                            <option value="parceiros-exemplo.com.br">@parceiros-exemplo.com.br</option>
+                        </select>
+                        <div class="custom-select-wrapper" data-select-id="multiDomainSelect">
+                            <div class="custom-select-display"></div>
+                            <div class="custom-select-options hidden"></div>
+                        </div>
+                    </div>
+                    <div id="multi-user-status"></div>
+                    <button type="button" id="btnCriarMultiplosUsuarios" class="button-primary">
+                        <i class="fas fa-users"></i> Criar Usuários
+                    </button>
+                </section>
+                
+                <section id="tela-sucesso-lote" class="tela hidden">
+                    <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                    <h2>Usuários Criados!</h2>
+                    <p>Seguem os Dados dos usuários</p>
+                    <div id="multi-success-results" class="multi-success-results">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="btnCopiarMultiplosDados" class="button-secondary" aria-label="Copiar todos os dados"><i class="fas fa-copy"></i> Copiar Dados</button>
+                        <button type="button" id="btnCriarNovoMulti" class="button-primary" aria-label="Voltar ao formulário principal"><i class="fas fa-redo"></i> Nova Criação</button>
+                    </div>
+                </section>
+
+                <section id="tela-gerenciamento" class="tela hidden">
+                    <div id="status-gerenciamento"></div>
+                    <div class="form-group">
+                        <label for="userSearch">Pesquisar Usuário (por nome ou login)</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="userSearch" placeholder="Digite para buscar..." autocomplete="off">
+                            <div class="spinner hidden" id="spinnerUserSearch"></div>
+                            <ul id="userSearchSugestoes" class="suggestions-list hidden"></ul>
+                        </div>
+                    </div>
+
+                    <div id="userDetails" class="hidden">
+                        <div class="user-management-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 id="manageDisplayName"></h3>
+                                    <span id="userStatusBadge" class="status-badge"></span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-container">
+                                    <div class="info-item">
+                                        <i class="fas fa-briefcase info-icon"></i>
+                                        <div class="info-content">
+                                            <label for="manageCargo">Cargo</label>
+                                            <input type="text" id="manageCargo" class="management-input">
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-building info-icon"></i>
+                                        <div class="info-content">
+                                            <label for="manageSetor">Setor/Departamento</label>
+                                            <input type="text" id="manageSetor" class="management-input">
+                                        </div>
+                                    </div>
+                                    <div class="info-item full-width">
+                                        <i class="fas fa-map-marker-alt info-icon"></i>
+                                        <div class="info-content">
+                                            <label for="manageCentroCusto">Centro de Custo</label>
+                                            <input type="text" id="manageCentroCusto" class="management-input">
+                                        </div>
+                                    </div>
+                                    <div class="info-item full-width">
+                                        <i class="fas fa-user-tie info-icon"></i>
+                                        <div class="info-content">
+                                            <div id="displayGestorContainer">
+                                                <label>Gestor Atual</label>
+                                                <div class="display-field-with-button">
+                                                    <p id="manageGestorAtual" class="display-field">Nenhum</p>
+                                                    <button type="button" id="btnEditarGestor" class="button-edit"><i class="fas fa-pencil-alt"></i></button>
+                                                </div>
+                                            </div>
+                                            <div id="searchGestorContainer" class="hidden">
+                                                <label for="manageGestorSearch">Novo Gestor (Opcional)</label>
+                                                <div class="search-wrapper">
+                                                    <input type="text" id="manageGestorSearch" class="management-input" placeholder="Digite para buscar..." autocomplete="off">
+                                                    <input type="hidden" id="manageGestor" name="manageGestor">
+                                                    <div class="spinner hidden" id="spinnerManageGestor"></div>
+                                                    <ul id="manageGestorSugestoes" class="suggestions-list hidden"></ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="form-actions-grid">
+                                    <button type="button" id="btnSalvarAlteracoes" class="button-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+                                    <button type="button" id="btnRedefinirSenha" class="button-secondary"><i class="fas fa-key"></i> Redefinir Senha</button>
+                                    <button type="button" id="btnAlternarStatus" class="button-secondary"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </main>
+    </div>
+    
+    <div id="password-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Redefinir Senha</h2>
+            <p>A senha deve atender aos seguintes requisitos:</p>
+            <div class="form-group">
+                <label for="new-password-input">Nova Senha</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="new-password-input" class="management-input" autocomplete="new-password">
+                    <button type="button" id="toggle-password-visibility" class="password-toggle-btn">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="password-requirements">
+                <p class="requirement-item" id="req-length"><i class="fas fa-circle"></i> Pelo menos 10 caracteres</p>
+                <p class="requirement-item" id="req-letter"><i class="fas fa-circle"></i> Pelo menos uma letra</p>
+                <p class="requirement-item" id="req-number"><i class="fas fa-circle"></i> Pelo menos um número</p>
+                <p class="requirement-item" id="req-special"><i class="fas fa-circle"></i> Pelo menos um caractere especial</p>
+            </div>
+
+            <div class="form-actions-modal">
+                <button type="button" id="btn-cancel-password" class="button-secondary">Cancelar</button>
+                <button type="button" id="btn-confirm-password" class="button-primary" disabled>Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./Script.js" defer></script>
+</body>
+</html>
