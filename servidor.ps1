@@ -19,8 +19,6 @@ $Global:tenantId = "[INSIRA_SEU_TENANT_ID_AQUI]"
 $Global:certThumbprint = "[INSIRA_O_THUMBPRINT_DO_CERTIFICADO_AQUI]"
 
 # Ambiente AD
-$Global:ADConnectServer = "[NOME_DO_SERVIDOR_AD_CONNECT]" # Ex: SRV-ADSYNC01
-$Global:caminhoBaseDasOUs = "OU=Usuarios,OU=SuaEmpresa,DC=dominio,DC=local"
 $Global:defaultDomain = "exemplo.com.br"
 $Global:telefonePadrao = "+55 (00) 0000-0000"
 $Global:sitePadrao = "www.exemplo.com.br"
