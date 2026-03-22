@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Na versão demo, não usamos uma API real. 
+    // const API_BASE_URL = 'http://localhost:8080';
 
     const ui = {
         telas: {
@@ -143,39 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSaving = false;
     let hasInitializedSelects = false;
 
-    // DADOS MOCKADOS PARA A DEMONSTRAÇÃO
-    const mockData = {
-        gestores: [
-            { DisplayName: 'Carlos Silva (Diretor)', DistinguishedName: 'CN=Carlos Silva,OU=Diretoria,DC=exemplo,DC=com' },
-            { DisplayName: 'Ana Souza (Gerente TI)', DistinguishedName: 'CN=Ana Souza,OU=TI,DC=exemplo,DC=com' },
-            { DisplayName: 'Roberto Alves (Coord. Engenharia)', DistinguishedName: 'CN=Roberto Alves,OU=Engenharia,DC=exemplo,DC=com' }
-        ],
-        centrosCusto: [
-            { Name: 'Matriz - TI (CC-1001)', DistinguishedName: 'OU=TI,OU=Matriz,DC=exemplo,DC=com' },
-            { Name: 'Obra Alfa - Engenharia (CC-2045)', DistinguishedName: 'OU=Engenharia,OU=Obra Alfa,DC=exemplo,DC=com' },
-            { Name: 'Filial Sul - Administrativo (CC-3099)', DistinguishedName: 'OU=Admin,OU=Filial Sul,DC=exemplo,DC=com' }
-        ],
-        grupos: [
-            { Name: 'G_Acesso_Pasta_Financeiro' },
-            { Name: 'G_Software_AutoCAD' },
-            { Name: 'G_Email_Engenheiros' },
-            { Name: 'G_VPN_Acesso_Externo' }
-        ],
-        computadores: [
-            { Name: 'NB-TI-045' }, { Name: 'NB-ENG-102' }, { Name: 'WS-DES-001' }
-        ],
-        usuariosParaGerenciar: [
-            { 
-                SamAccountName: 'joao.silva', DisplayName: 'João da Silva', Title: 'Analista Pleno', 
-                Department: 'TI', Description: 'Matriz - TI (CC-1001)', ManagerName: 'Ana Souza (Gerente TI)', Enabled: true 
-            },
-            { 
-                SamAccountName: 'maria.oliveira', DisplayName: 'Maria Oliveira', Title: 'Estagiária', 
-                Department: 'Engenharia', Description: 'Obra Alfa (CC-2045)', ManagerName: 'Roberto Alves (Coord. Engenharia)', Enabled: false 
-            }
-        ]
-    };
-
     // Função auxiliar para simular delay de rede
     const simulateDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -211,10 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!checkPasswordRequirements()) return;
         closePasswordModal();
         showPopup('Redefinindo senha (Simulação)...', 'loading');
-        await simulateDelay(1500); 
+        await simulateDelay(1500);
         showPopup(`Senha redefinida com sucesso! (Modo Demo)`, 'success', 5000);
     }
 
+    //Select
     function updateCustomSelectsDisplay() {
         document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
             const selectId = wrapper.dataset.selectId;
@@ -267,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //Lógica menu - navegaçãoo
+    //Lógica menu - navegação
     function mostrarTela(nomeTela) {
         const container = document.querySelector('.container');
         if (nomeTela === 'gerenciamento') {
@@ -340,18 +310,23 @@ document.addEventListener('DOMContentLoaded', () => {
     async function buscarUsuarioMockado(samAccountName) {
         ui.gerenciamento.spinner.classList.remove('hidden');
         ui.status.gerenciamento.innerHTML = '';
-        await simulateDelay(800); // Mock delay
+        await simulateDelay(600); // Mock delay
 
-        const user = mockData.usuariosParaGerenciar.find(u => u.SamAccountName.toLowerCase() === samAccountName.toLowerCase());
+        // Cria um usuário fictício na hora baseado no que foi digitado! Nunca trava.
+        const nomeExibicao = samAccountName.replace(/\./g, ' ').replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+        
+        const user = { 
+            SamAccountName: samAccountName, 
+            DisplayName: nomeExibicao || 'Usuário Teste', 
+            Title: 'Cargo Simulado', 
+            Department: 'Setor Simulado', 
+            Description: 'CC-Demo', 
+            ManagerName: 'Gestor Demo', 
+            Enabled: true 
+        };
         
         ui.gerenciamento.spinner.classList.add('hidden');
-        
-        if(user) {
-            renderizarDetalhesUsuario(user);
-        } else {
-            ui.status.gerenciamento.innerHTML = `<div class="status-box error">Usuário não encontrado (Modo Demo possui apenas 'joao.silva' e 'maria.oliveira').</div>`;
-            ui.gerenciamento.detailsContainer.classList.add('hidden');
-        }
+        renderizarDetalhesUsuario(user);
     }
 
     function renderizarDetalhesUsuario(user) {
@@ -372,13 +347,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.gerenciamento.gestorSearch.value = '';
         ui.gerenciamento.gestorHidden.value = '';
         
-        // Mantém a referência do objeto original para simular a mudança de status
         ui.gerenciamento.btnAlternarStatus.onclick = async () => {
             showPopup('Alterando status...', 'loading');
-            await simulateDelay(1000);
-            user.Enabled = !user.Enabled; // Altera no mock
+            await simulateDelay(800);
+            user.Enabled = !user.Enabled; 
             showPopup('Status alterado com sucesso! (Modo Demo)', 'success');
-            renderizarDetalhesUsuario(user); // Re-renderiza
+            renderizarDetalhesUsuario(user); 
         };
 
         if (user.Enabled) {
@@ -408,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveButton.innerHTML = `Salvando... <div class="spinner"></div>`;
         saveButton.disabled = true;
         
-        await simulateDelay(1500); // Mock delay
+        await simulateDelay(1000); 
         
         showPopup('Alterações salvas com sucesso! (Modo Demo)', 'success');
         
@@ -417,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveButton.disabled = false;
     }
 
-    //Funções secundarias 
     function showPopup(message, type = 'loading', duration = 4000) {
         const popup = document.createElement('div');
         popup.className = `popup-notification ${type}`;
@@ -444,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isSyncing = false;
     }
 
+    // Criação rápida em lote
     function addNameField() {
         const fieldCount = ui.lote.nameList.querySelectorAll('.dynamic-input-group').length;
         const newField = document.createElement('div');
@@ -456,23 +430,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function criarMultiplosUsuarios() {
         const nameInputs = ui.lote.nameList.querySelectorAll('.multi-user-name-input');
         const nomes = Array.from(nameInputs).map(input => input.value.trim()).filter(name => name);
-        const centroCusto = ui.lote.ouHidden.value;
         const dominio = ui.lote.domainSelect.value;
+        
         if (nomes.length === 0) {
             ui.status.lote.innerHTML = `<div class="status-box error">Adicione pelo menos um nome completo.</div>`;
             return;
         }
-        if (!centroCusto) {
-            ui.status.lote.innerHTML = `<div class="status-box error">Selecione um Centro de Custo.</div>`;
-            return;
-        }
+        
         ui.status.lote.innerHTML = '';
         const createButton = ui.lote.createBtn;
         const originalButtonHTML = createButton.innerHTML;
-        createButton.innerHTML = `Criando... <div class="spinner"></div>`;
+        createButton.innerHTML = `Criando (Demo)... <div class="spinner"></div>`;
         createButton.disabled = true;
         
-        await simulateDelay(2000);
+        await simulateDelay(2000); 
         
         const resultadosMock = {
             usuariosCriados: nomes.map(n => ({
@@ -514,22 +485,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //Formulario
+    //Formulário Principal
     function validarTelaDadosUsuario() {
         const erros = [];
         const nomeCompletoValue = ui.inputs.nomeCompleto.value.trim();
+        
         if (!nomeCompletoValue) {
             erros.push('Nome Completo');
         } else if (nomeCompletoValue.split(' ').filter(n => n).length < 2) {
             erros.push('Nome Completo (informe pelo menos nome e sobrenome)');
         }
+        
         if (!isUsernameAvailable) {
             erros.push('Nome de Usuário (já em uso ou inválido)');
         }
+        
         if (!ui.inputs.cargo.value.trim()) erros.push('Cargo');
         if (!ui.inputs.setor.value.trim()) erros.push('Setor/Departamento');
-        if (!ui.inputs.gestorHidden.value) erros.push('Gestor');
-        if (!ui.inputs.ouSearch.value) erros.push('Centro de Custo');
+        
+        // Remoção da trava do Gestor e Centro de Custo!
+        // if (!ui.inputs.gestorHidden.value) erros.push('Gestor');
+        // if (!ui.inputs.ouSearch.value) erros.push('Centro de Custo');
+        
         if (erros.length > 0) {
             ui.status.dadosUsuario.innerHTML = `<div class="status-box error">Corrija: ${erros.join(', ')}.</div>`;
             return false;
@@ -556,42 +533,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!samAccountName) { iconContainer.innerHTML = ''; isUsernameAvailable = false; return; }
         iconContainer.innerHTML = '<div class="spinner-inline"></div>';
         
-        await simulateDelay(600); // Mock delay
+        await simulateDelay(600); 
 
-        // Simula que os nomes 'joao.silva' e 'maria.oliveira' já existem
-        if (samAccountName === 'joao.silva' || samAccountName === 'maria.oliveira') {
-            iconContainer.innerHTML = `<i class="fas fa-times-circle status-icon error" title="Usuário '${samAccountName}' já existe!"></i>`;
-            isUsernameAvailable = false;
-        } else {
-            iconContainer.innerHTML = `<i class="fas fa-check-circle status-icon success" title="Usuário '${samAccountName}' disponível."></i>`;
-            isUsernameAvailable = true;
-        }
+        // Permite 100% dos nomes na Demo
+        iconContainer.innerHTML = `<i class="fas fa-check-circle status-icon success" title="Usuário '${samAccountName}' disponível."></i>`;
+        isUsernameAvailable = true;
     }
 
-    // FUNÇÃO DE BUSCA
-    async function buscarSugestoesMock(tipo, termo, listaSugestoes, spinner, callbackSelecao) {
-        if (isSelectionInProgress || !termo || termo.length < 2) { listaSugestoes.classList.add('hidden'); return; }
+    // --- FUNÇÃO DE BUSCA MOCKADA TOTALMENTE PERMISSIVA ---
+    // Agora ela SEMPRE retorna o que o usuário digitou, sem nunca dar "Nenhum resultado"
+    async function buscarSugestoesMock(termo, listaSugestoes, spinner, callbackSelecao) {
+        if (isSelectionInProgress || !termo || termo.trim().length === 0) { 
+            listaSugestoes.classList.add('hidden'); 
+            return; 
+        }
+        
         listaSugestoes.innerHTML = '<li class="no-results">Buscando...</li>';
         listaSugestoes.classList.remove('hidden');
         spinner.classList.remove('hidden');
         
-        await simulateDelay(500); // Mock delay
+        await simulateDelay(300); 
 
-        // Filtra os dados mockados baseado no termo digitado
-        const termLower = termo.toLowerCase();
-        let results = [];
-        
-        if (tipo === 'gestores') {
-            results = mockData.gestores.filter(g => g.DisplayName.toLowerCase().includes(termLower));
-        } else if (tipo === 'centrosCusto') {
-            results = mockData.centrosCusto.filter(c => c.Name.toLowerCase().includes(termLower));
-        } else if (tipo === 'grupos') {
-            results = mockData.grupos.filter(g => g.Name.toLowerCase().includes(termLower));
-        } else if (tipo === 'computadores') {
-            results = mockData.computadores.filter(c => c.Name.toLowerCase().includes(termLower));
-        } else if (tipo === 'usuarios') {
-            results = mockData.usuariosParaGerenciar.filter(u => u.DisplayName.toLowerCase().includes(termLower) || u.SamAccountName.toLowerCase().includes(termLower));
-        }
+        // Retorna o que foi digitado como se fosse um resultado do banco de dados
+        let results = [
+            { 
+                DisplayName: termo, 
+                Name: termo,
+                SamAccountName: termo.replace(/\s+/g, '.').toLowerCase(),
+                DistinguishedName: `CN=${termo},OU=Demo,DC=exemplo,DC=com`
+            }
+        ];
 
         renderSugestoes(results, listaSugestoes, callbackSelecao);
         spinner.classList.add('hidden');
@@ -682,9 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.botoes.proximoGrupos.disabled = true;
         ['e3', 'standard', 'basic'].forEach(l => ui.contadoresLicenca[l].textContent = 'Buscando...');
         
-        await simulateDelay(1000); // Mock delay
+        await simulateDelay(1000);
 
-        // Simula disponibilidade aleatória
         licenseAvailability = {
             E3: Math.floor(Math.random() * 50) + 1,
             Standard: Math.floor(Math.random() * 20),
@@ -708,11 +678,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const dominio = ui.inputs.domainSelect.value;
         const samAccountName = gerarSamAccountName(ui.inputs.nomeCompleto.value);
 
-        await simulateDelay(2500); // Mock delay simulando Active Directory e M365
+        await simulateDelay(2500); 
         
         ui.dadosSucesso.email.textContent = `${samAccountName}@${dominio}`;
         ui.dadosSucesso.usuario.textContent = `${dominio.split('.')[0]}\\${samAccountName}`;
-        ui.dadosSucesso.senha.textContent = 'GEL@' + Math.floor(Math.random() * 10000) + 'Demo';
+        ui.dadosSucesso.senha.textContent = 'Demo@' + Math.floor(Math.random() * 10000) + 'Az';
 
         const licencaSelecionada = ui.form.querySelector('input[name="licenca"]:checked').value;
         if (licencaSelecionada !== 'None') {
@@ -739,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Menu
+    // Eventos de Menu
     ui.menu.openBtn.addEventListener('click', () => ui.menu.menuPanel.classList.add('visible'));
     ui.menu.closeBtn.addEventListener('click', () => ui.menu.menuPanel.classList.remove('visible'));
     ui.menu.padraoBtn.addEventListener('click', (e) => { e.preventDefault(); resetarFormularioPrincipal(); });
@@ -747,14 +717,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.menu.gerenciarBtn.addEventListener('click', (e) => { e.preventDefault(); resetarTelaGerenciamento(); });
     ui.menu.syncBtn.addEventListener('click', (e) => { e.preventDefault(); forcarSincronizacao(); });
 
-    // Criação Rápida
+    // Eventos Lote
     ui.lote.addNameBtn.addEventListener('click', addNameField);
     ui.lote.createBtn.addEventListener('click', criarMultiplosUsuarios);
     ui.lote.copyAllBtn.addEventListener('click', copiarMultiplosDados);
     ui.lote.createNewBtn.addEventListener('click', resetarFormularioLote);
-    ui.lote.ouSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('centrosCusto', ui.lote.ouSearch.value, ui.sugestoes.loteOU, ui.spinners.loteOU, selecionarMultiOU)));
+    ui.lote.ouSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.lote.ouSearch.value, ui.sugestoes.loteOU, ui.spinners.loteOU, selecionarMultiOU)));
     
-    // Formulário
+    // Eventos Formulário
     ui.inputs.nomeCompleto.addEventListener('input', () => {
         buscarComDebounce(verificarNomeDeUsuario);
         const remaining = 50 - ui.inputs.nomeCompleto.value.length;
@@ -762,18 +732,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.charCounter.className = `char-counter ${remaining <= 0 ? 'error' : remaining <= 20 ? 'warning' : ''}`;
     });
     
-    // ATUALIZAÇÃO PARA USAR A BUSCA MOCKADA
-    ui.inputs.gestorSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('gestores', ui.inputs.gestorSearch.value, ui.sugestoes.gestor, ui.spinners.gestor, selecionarGestor)));
-    ui.inputs.ouSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('centrosCusto', ui.inputs.ouSearch.value, ui.sugestoes.ou, ui.spinners.ou, selecionarOU)));
-    ui.inputs.groupSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('grupos', ui.inputs.groupSearch.value, ui.sugestoes.grupo, ui.spinners.grupo, selecionarGrupo)));
-    ui.inputs.logonWorkstationsSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('computadores', ui.inputs.logonWorkstationsSearch.value, ui.sugestoes.logonWorkstations, ui.spinners.logonWorkstations, selecionarNotebook)));
+    // TODAS as buscas agora usam o Mock Permissivo
+    ui.inputs.gestorSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.inputs.gestorSearch.value, ui.sugestoes.gestor, ui.spinners.gestor, selecionarGestor)));
+    ui.inputs.ouSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.inputs.ouSearch.value, ui.sugestoes.ou, ui.spinners.ou, selecionarOU)));
+    ui.inputs.groupSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.inputs.groupSearch.value, ui.sugestoes.grupo, ui.spinners.grupo, selecionarGrupo)));
+    ui.inputs.logonWorkstationsSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.inputs.logonWorkstationsSearch.value, ui.sugestoes.logonWorkstations, ui.spinners.logonWorkstations, selecionarNotebook)));
     
     // Gerenciamento de Usuário
     ui.gerenciamento.userSearch.addEventListener('input', () => {
         if (isSelectionInProgress) return;
-        buscarComDebounce(() => buscarSugestoesMock('usuarios', ui.gerenciamento.userSearch.value, ui.sugestoes.userSearch, ui.gerenciamento.spinner, selecionarUsuarioParaGerenciar));
+        buscarComDebounce(() => buscarSugestoesMock(ui.gerenciamento.userSearch.value, ui.sugestoes.userSearch, ui.gerenciamento.spinner, selecionarUsuarioParaGerenciar));
     });
-    ui.gerenciamento.gestorSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock('gestores', ui.gerenciamento.gestorSearch.value, ui.sugestoes.manageGestor, ui.spinners.manageGestor, selecionarGestorGerenciamento)));
+    ui.gerenciamento.gestorSearch.addEventListener('input', () => buscarComDebounce(() => buscarSugestoesMock(ui.gerenciamento.gestorSearch.value, ui.sugestoes.manageGestor, ui.spinners.manageGestor, selecionarGestorGerenciamento)));
     ui.gerenciamento.btnSalvar.addEventListener('click', salvarAlteracoes);
     ui.gerenciamento.btnRedefinirSenha.addEventListener('click', redefinirSenha);
     
@@ -807,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Botões de Navegação Padrão
+    // Botões de Navegação
     ui.botoes.proximoComputadores.addEventListener('click', () => { if (validarTelaDadosUsuario()) mostrarTela('computadores'); });
     ui.botoes.voltarDados.addEventListener('click', () => mostrarTela('dadosUsuario'));
     ui.botoes.proximoLicencas.addEventListener('click', fetchLicenses);
@@ -818,13 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.status.licencas.innerHTML = `<div class="status-box error">Selecione uma opção de licença.</div>`;
             return;
         }
-        const licenca = licencaSelecionada.value;
-        if (licenca === 'None' || (licenseAvailability[licenca] && licenseAvailability[licenca] > 0)) {
-            ui.status.licencas.innerHTML = '';
-            mostrarTela('grupos');
-        } else {
-            ui.status.licencas.innerHTML = `<div class="status-box error">Licença indisponível.</div>`;
-        }
+        mostrarTela('grupos');
     });
     ui.botoes.voltarLicencas.addEventListener('click', () => mostrarTela('licencas'));
     ui.botoes.criarUsuario.addEventListener('click', criarUsuario);
